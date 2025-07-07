@@ -29,6 +29,9 @@ class GraficadorLineal:
         x = np.linspace(0, 10, 400)
         plt.close('all')
         plt.figure(figsize=(8, 6))
+        
+        # Lista para almacenar los vértices del polígono de la región factible
+        vertices = []
 
         for restriccion in self.restricciones_texto:
             restriccion = restriccion.replace(' ', '')
@@ -61,25 +64,56 @@ class GraficadorLineal:
                     y_vals = (c_rhs - a * x) / b_val
                     plt.plot(x, y_vals, label=restriccion)
                 else:
-                    plt.axvline(x=c_rhs / a, linestyle='--', label=restriccion)
+                    plt.axvline(x=c_rhs / a, linestyle='--', color='red', label=restriccion)
 
             elif restriccion.startswith('x<='):
                 val = float(restriccion.split('<=')[1])
                 A.append([1, 0])
                 b.append(val)
-                plt.axvline(x=val, linestyle='--', label=restriccion)
+                plt.axvline(x=val, linestyle='--', color='red', label=restriccion)
 
             elif restriccion.startswith('y<='):
                 val = float(restriccion.split('<=')[1])
                 A.append([0, 1])
                 b.append(val)
                 plt.axhline(y=val, linestyle='--', label=restriccion)
+                
+                # Agregar vértices para la región factible
+                if len(vertices) == 0:
+                    vertices.append((0, 0))  # Origen
+                vertices.append((0, val))  # Intersección con el eje y
+                vertices.append((val, 0))  # Intersección con el eje x
+                
+        # Si hay restricciones, agregar el vértice del origen
+        if len(vertices) > 0:
+            vertices.append((0, 0))
+            
+        # Rellenar la región factible con verde
+
 
         # 3. Resolver
         res = linprog(c=c, A_ub=A, b_ub=b, bounds=bounds, method='highs')
         if res.success:
             x_opt, y_opt = res.x
+            
+            # Calcular el valor óptimo de la función objetivo
+            valor_optimo = np.dot(c, [x_opt, y_opt])
+            
+            # Generar líneas de isoutilidad
+            valores_isoutilidad = np.linspace(0, valor_optimo, 5)  # 5 líneas de isoutilidad
+            for valor in valores_isoutilidad:
+                # Calcular y para diferentes valores de x
+                if c[1] != 0:  # Si hay coeficiente de y
+                    y_vals = (-c[0] * x + valor) / c[1]
+                    plt.plot(x, y_vals, '--', alpha=0.5, color='gray', 
+                            label=f'z={valor:.2f}' if valor == valor_optimo else None)
+                else:  # Si no hay coeficiente de y (función objetivo horizontal)
+                    plt.axhline(y=valor/c[0], linestyle='--', alpha=0.5, color='gray', 
+                              label=f'z={valor:.2f}' if valor == valor_optimo else None)
+            
+            # Punto óptimo
             plt.plot(x_opt, y_opt, 'ro', label=f'Óptimo ({x_opt:.2f}, {y_opt:.2f})')
+            plt.text(x_opt, y_opt + 0.3, f'({x_opt:.2f}, {y_opt:.2f})', color='red', ha='center')
         else:
             print("No se pudo encontrar solución óptima.")
 
