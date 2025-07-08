@@ -6,8 +6,10 @@ from core.conversorSimplex import ConversorSimplex, SimplexTabular, VentanaSimpl
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QLineEdit, QTextEdit,
     QVBoxLayout, QHBoxLayout, QPushButton, QCheckBox, QRadioButton,
-    QMessageBox
+    QMessageBox, QDialog
 )
+from core.estandarizar import Estandarizador
+
 
 
 class VentanaPrincipal(QWidget):
@@ -95,27 +97,84 @@ class VentanaPrincipal(QWidget):
         except Exception as e:
             self.mostrar_error(f"Ocurrió un error al graficar: {str(e)}")
 
-    def resolver(self):
+    def resolver(self, *args):
         try:
-            funcion_str = self.funcion_input.text()
-            restricciones_texto = self.restricciones_input.toPlainText().split('\n')
-            tipo = 'max' if self.max_radio.isChecked() else 'min'
+            funcion_str = self.funcion_input.text().strip()
+            restricciones_texto = self.restricciones_input.toPlainText().strip().split('\n')
+            es_maximizacion = self.max_radio.isChecked()
 
-            resultado = ConversorSimplex.estandarizar_problema(funcion_str, restricciones_texto, tipo)
-            simplex = SimplexTabular(resultado['tabla'], resultado['rhs'], resultado['z'])
+            if not funcion_str:
+                self.mostrar_error("Debe ingresar una función objetivo.")
+                return
 
-            while simplex.siguiente_paso():
-                pass
+            if not restricciones_texto:
+                self.mostrar_error("Debe ingresar al menos una restricción.")
+                return
 
-            if self.paso_a_paso_checkbox.isChecked():
-                self.ventana_pasos = VentanaSimplexPaso(simplex.obtener_historial())
-                self.ventana_pasos.show()
-            else:
-                resumen = simplex.obtener_resumen_final()
-                msg = QMessageBox()
-                msg.setWindowTitle("Resultado final")
-                msg.setText("\n".join(resumen))
-                msg.exec_()
+            # --- Parsear función objetivo ---
+            variables = sorted(set(re.findall(r'[a-zA-Z]\w*', funcion_str)))
+            coef_obj = [0] * len(variables)
+
+            for term in re.finditer(r'([+-]?\s*\d*\.?\d*)\s*([a-zA-Z]\w*)', funcion_str.replace(' ', '')):
+                coef_str, var = term.groups()
+                coef = float(coef_str) if coef_str.strip() not in ['', '+', '-'] else float(coef_str + '1')
+                coef_obj[variables.index(var)] = coef
+
+            # --- Parsear restricciones ---
+            restricciones = []
+            tipo_restricciones = []
+            rhs = []
+
+            for linea in restricciones_texto:
+                if not linea.strip() or linea.strip().lower() in ['x >= 0', 'x, y >= 0']:
+                    continue
+
+                match = re.search(r'(<=|>=|=)', linea)
+                if not match:
+                    continue
+
+                tipo = match.group(1)
+                lhs, rhs_val = linea.split(tipo)
+                rhs.append(float(rhs_val.strip()))
+                tipo_restricciones.append(tipo)
+
+                coef_fila = [0] * len(variables)
+                for term in re.finditer(r'([+-]?\s*\d*\.?\d*)\s*([a-zA-Z]\w*)', lhs.replace(' ', '')):
+                    coef_str, var = term.groups()
+                    coef = float(coef_str) if coef_str.strip() not in ['', '+', '-'] else float(coef_str + '1')
+                    coef_fila[variables.index(var)] = coef
+
+                restricciones.append(coef_fila)
+
+            # --- Llamar estandarizador ---
+            est = Estandarizador(coef_obj, restricciones, tipo_restricciones, rhs, es_maximizacion)
+            resultado = est.convertir_a_estandar_texto()
+
+            print("=== Problema estandarizado ===")
+            print(resultado)
+            self.mostrar_resultado(resultado)  # ✅ mostrar en ventana
 
         except Exception as e:
-            self.mostrar_error(f"Error al resolver: {str(e)}")
+            self.mostrar_error(f"Ocurrió un error al resolver: {str(e)}")
+
+    def mostrar_resultado(self, texto):
+        dialogo = QDialog(self)
+        dialogo.setWindowTitle("Problema estandarizado")
+        dialogo.setMinimumSize(500, 400)
+
+        layout = QVBoxLayout()
+        area_texto = QTextEdit()
+        area_texto.setReadOnly(True)
+
+        explicacion = (
+            "\n\n📘 Explicación de variables introducidas:\n"
+            "• S = Variables de holgura (se suman cuando la restricción es ≤)\n"
+            "• E = Variables de exceso (se restan cuando la restricción es ≥)\n"
+            "• A = Variables artificiales (se agregan cuando la restricción es ≥ o =, y se penalizan con M en la función objetivo)\n"
+        )
+
+        area_texto.setPlainText(texto + explicacion)
+
+        layout.addWidget(area_texto)
+        dialogo.setLayout(layout)
+        dialogo.exec_()
