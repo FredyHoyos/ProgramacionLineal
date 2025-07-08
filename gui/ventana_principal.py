@@ -159,6 +159,24 @@ class VentanaPrincipal(QWidget):
             if self.paso_a_paso_checkbox.isChecked():
                 self.simplex_ventana = SimplexPasoAPaso(resultado.lower())  # `resultado` debe incluir los datos de la tabla
                 self.simplex_ventana.exec_()
+            else:
+                solucion_directa = SimplexPasoAPaso(resultado.lower())
+                resultado_html = solucion_directa.resolver_simplex()
+    
+                dialogo = QDialog(self)
+                dialogo.setWindowTitle("Resultado óptimo")
+                dialogo.setMinimumSize(600, 400)
+
+                layout = QVBoxLayout()
+                texto_html = QTextEdit()
+                texto_html.setReadOnly(True)
+                texto_html.setHtml(resultado_html)
+
+                layout.addWidget(texto_html)
+                dialogo.setLayout(layout)
+                dialogo.exec_()
+
+
 
 
 

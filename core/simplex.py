@@ -9,7 +9,7 @@ class SimplexPasoAPaso(QDialog):
     def __init__(self, datos):
         super().__init__()
         self.setWindowTitle("Método Simplex Paso a Paso")
-        self.setMinimumSize(900, 350)
+        self.setMinimumSize(600, 350)
 
         self.datos = datos
         self.iteracion_actual = 0
@@ -68,7 +68,7 @@ class SimplexPasoAPaso(QDialog):
                 encontrada = False
                 for var in self.variables:
                     if var.lower().startswith("s"):
-                        self.basicas.append(f"s{i+2}")
+                        self.basicas.append(f"s{i}")
                         encontrada = True
                         break
                 if not encontrada:
@@ -91,26 +91,45 @@ class SimplexPasoAPaso(QDialog):
         return resultado
 
     def mostrar_tabla(self):
-        encabezado = f"Iteración = {self.iteracion_actual}\n"
+        html = f"<h3>Iteración = {self.iteracion_actual}</h3>"
+        html += "<table border='1' cellspacing='0' cellpadding='5' style='border-collapse: collapse; font-family: monospace;'>"
+
         columnas = ['Ec #', 'VB'] + self.variables + ['Lado der', 'Razón']
-        ancho = 8
-        linea_sep = "+" + "+".join("-" * ancho for _ in columnas) + "+"
-        fila_encabezado = "|" + "|".join(f"{col:^{ancho}}" for col in columnas) + "|"
-        resultado = encabezado + linea_sep + "\n" + fila_encabezado + "\n" + linea_sep + "\n"
+        html += "<tr style='background-color: #f0f0f0;'>" + "".join(f"<th>{col}</th>" for col in columnas) + "</tr>"
+
+        col_pivot = self.columna_pivote()
+        fila_pivot = self.fila_pivote(col_pivot) if col_pivot is not None else None
 
         for i, fila in enumerate(self.tabla):
             razon = "-"
-            if i != 0:
-                pivot_col = self.columna_pivote()
-                if pivot_col is not None and fila[pivot_col] > 0:
-                    razon = round(fila[-1] / fila[pivot_col], 2)
-            celdas = [f"({i})", self.basicas[i]] + \
-                     [str(Fraction(v).limit_denominator()) for v in fila] + \
-                     [str(razon)]
-            fila_str = "|" + "|".join(f"{c:^{ancho}}" for c in celdas) + "|"
-            resultado += fila_str + "\n" + linea_sep + "\n"
+            if i != 0 and col_pivot is not None and fila[col_pivot] > 0:
+                razon = round(fila[-1] / fila[col_pivot], 2)
 
-        return resultado
+            celdas = [f"({i})", self.basicas[i]] + \
+                    [str(Fraction(v).limit_denominator()) for v in fila] + \
+                    [str(razon)]
+
+            html += "<tr>"
+            for j, valor in enumerate(celdas):
+                estilo = ""
+
+                # columna pivote (variable candidata)
+                if col_pivot is not None and j == col_pivot + 2 and i != 0:
+                    estilo = "background-color: yellow;"
+
+                # fila pivote (restricción con menor razón)
+                if fila_pivot is not None and i == fila_pivot:
+                    estilo = "background-color: #cceeff;"  # azul claro
+
+                # celda pivote
+                if fila_pivot is not None and col_pivot is not None and i == fila_pivot and j == col_pivot + 2:
+                    estilo = "background-color: orange; font-weight: bold;"
+
+                html += f"<td style='{estilo}'>{valor}</td>"
+            html += "</tr>"
+
+        html += "</table>"
+        return html
 
     def columna_pivote(self):
         z_row = self.tabla[0][1:-1]
@@ -142,25 +161,43 @@ class SimplexPasoAPaso(QDialog):
         self.historial.append((deepcopy(self.tabla), deepcopy(self.basicas)))
 
     def mostrar_actual(self):
-        self.texto.setPlainText(self.mostrar_tabla())
+        self.texto.setHtml(self.mostrar_tabla())
         self.boton_anterior.setEnabled(self.iteracion_actual > 0)
 
     def mostrar_siguiente(self):
+        # Determinar la columna pivote
         col = self.columna_pivote()
+
+        # Si no hay columna pivote, la solución óptima ha sido alcanzada
         if col is None:
-            self.texto.setPlainText(self.mostrar_tabla() + "\n✅ Solución óptima alcanzada.")
+            solucion_html = (
+                self.mostrar_tabla() +
+                "<p style='color: green; font-weight: bold;'>✅ Solución óptima alcanzada.</p>"+
+                self.obtener_resultado_final()
+            )
+            self.texto.setHtml(solucion_html)
             self.boton_siguiente.setEnabled(False)
             return
 
+        # Determinar la fila pivote
         fila = self.fila_pivote(col)
+
+        # Si no hay fila pivote válida, la solución no está acotada
         if fila is None:
-            self.texto.setPlainText("❌ El problema no tiene solución acotada.")
+            self.texto.setHtml(
+                "<p style='color: red; font-weight: bold;'>❌ El problema no tiene solución acotada.</p>"
+            )
             self.boton_siguiente.setEnabled(False)
             return
 
+        # Guardar el estado actual antes de pivotear
         self.guardar_estado()
+
+        # Realizar el pivoteo y actualizar la tabla
         self.pivotear(fila, col)
         self.iteracion_actual += 1
+
+        # Mostrar la tabla actualizada
         self.mostrar_actual()
 
     def mostrar_anterior(self):
@@ -169,3 +206,45 @@ class SimplexPasoAPaso(QDialog):
             self.tabla, self.basicas = self.historial.pop()
             self.boton_siguiente.setEnabled(True)
             self.mostrar_actual()
+
+    def resolver_simplex(self):
+        self.iteracion_actual = 0
+        self.historial.clear()
+
+        while True:
+            col = self.columna_pivote()
+
+            if col is None:
+                # Solución óptima alcanzada
+                html = self.mostrar_tabla()
+                html += "<p style='color: green; font-weight: bold;'>✅ Solución óptima alcanzada.</p>"
+                html += self.obtener_resultado_final()
+                return html
+
+            fila = self.fila_pivote(col)
+
+            if fila is None:
+                # Problema no acotado
+                return "<p style='color: red; font-weight: bold;'>❌ El problema no tiene solución acotada.</p>"
+
+            self.guardar_estado()
+            self.pivotear(fila, col)
+            self.iteracion_actual += 1
+
+    def obtener_resultado_final(self):
+        html = "<h4>Valores óptimos:</h4><ul>"
+
+        # Inicializar todas las variables en 0
+        valores = {var: 0 for var in self.variables}
+        for i in range(1, len(self.tabla)):
+            var = self.basicas[i]
+            if var in valores:
+                valores[var] = round(self.tabla[i][-1], 4)
+
+        for var in sorted(valores):
+            html += f"<li><b>{var}</b> = {valores[var]}</li>"
+
+        z_opt = round(self.tabla[0][-1], 4)
+        html += f"</ul><p><b>Z óptimo = {z_opt}</b></p>"
+
+        return html
