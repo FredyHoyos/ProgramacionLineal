@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from core.graficador_lineal import GraficadorLineal
 from core.conversorSimplex import ConversorSimplex, SimplexTabular, VentanaSimplexPaso
+from core.simplex import SimplexPasoAPaso
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QLineEdit, QTextEdit,
     QVBoxLayout, QHBoxLayout, QPushButton, QCheckBox, QRadioButton,
@@ -148,12 +149,20 @@ class VentanaPrincipal(QWidget):
 
             # --- Llamar estandarizador ---
             est = Estandarizador(coef_obj, restricciones, tipo_restricciones, rhs, es_maximizacion)
-            resultado = est.convertir_a_estandar_texto()
+            texto, resultado = est.convertir_a_estandar_texto()
 
-            print("=== Problema estandarizado ===")
-            print(resultado)
-            self.mostrar_resultado(resultado)  # ✅ mostrar en ventana
 
+            self.mostrar_resultado(texto)  # ✅ mostrar en ventana
+
+
+
+            if self.paso_a_paso_checkbox.isChecked():
+                self.simplex_ventana = SimplexPasoAPaso(resultado.lower())  # `resultado` debe incluir los datos de la tabla
+                self.simplex_ventana.exec_()
+
+
+
+    
         except Exception as e:
             self.mostrar_error(f"Ocurrió un error al resolver: {str(e)}")
 
@@ -178,3 +187,14 @@ class VentanaPrincipal(QWidget):
         layout.addWidget(area_texto)
         dialogo.setLayout(layout)
         dialogo.exec_()
+
+
+"""
+
+0.4x + 0,5y 
+
+0.3x + 0.1y <= 4
+0.5x + 0.5y = 12
+0.6x + 0.4y >= 6
+x, y >= 0
+"""
