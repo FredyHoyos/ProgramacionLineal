@@ -1,14 +1,18 @@
 import re
+
 import matplotlib.pyplot as plt
 import numpy as np
-from core.graficador_lineal import GraficadorLineal
-from core.conversorSimplex import ConversorSimplex, SimplexTabular, VentanaSimplexPaso
-from core.simplex import SimplexPasoAPaso
+
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QLineEdit, QTextEdit,
     QVBoxLayout, QHBoxLayout, QPushButton, QCheckBox, QRadioButton,
     QMessageBox, QDialog
 )
+
+from core.graficador_lineal import GraficadorLineal
+from core.simplex import SimplexPasoAPaso
+from core.simplexGranM import SimplexPasoAPasoGranM
+from core.granM import MetodoGranM
 from core.estandarizar import Estandarizador
 
 
@@ -75,6 +79,7 @@ class VentanaPrincipal(QWidget):
         msg.setIcon(QMessageBox.Critical)
         msg.setText("Error de entrada")
         msg.setInformativeText(mensaje)
+        print(mensaje)
         msg.setWindowTitle("Entrada inválida")
         msg.exec_()
 
@@ -155,30 +160,35 @@ class VentanaPrincipal(QWidget):
             self.mostrar_resultado(texto)  # ✅ mostrar en ventana
 
 
-
+            resultado = MetodoGranM(resultado).procesar()
             if self.paso_a_paso_checkbox.isChecked():
-                self.simplex_ventana = SimplexPasoAPaso(resultado.lower())  # `resultado` debe incluir los datos de la tabla
-                self.simplex_ventana.exec_()
+                if 'M' in resultado:
+                    self.simplex_ventana_granM = SimplexPasoAPasoGranM(resultado.lower())  # `resultado` debe incluir los datos de la tabla
+                    self.simplex_ventana_granM.exec_()
+                else:
+                    self.simplex_ventana = SimplexPasoAPaso(resultado.lower())  # `resultado` debe incluir los datos de la tabla
+                    self.simplex_ventana.exec_()
             else:
-                solucion_directa = SimplexPasoAPaso(resultado.lower())
-                resultado_html = solucion_directa.resolver_simplex()
-    
-                dialogo = QDialog(self)
-                dialogo.setWindowTitle("Resultado óptimo")
-                dialogo.setMinimumSize(600, 400)
+                if 'M' in resultado:
+                    ventana = SimplexPasoAPasoGranM(resultado.lower())
+                    resultado_html = ventana.resolver_directo()
+                else:
+                    solucion_directa = SimplexPasoAPaso(resultado.lower())
+                    resultado_html = solucion_directa.resolver_simplex()
 
-                layout = QVBoxLayout()
-                texto_html = QTextEdit()
-                texto_html.setReadOnly(True)
-                texto_html.setHtml(resultado_html)
+                # Mostrar en ventana (para ambos casos)
+                    dialogo = QDialog(self)
+                    dialogo.setWindowTitle("Resultado óptimo")
+                    dialogo.setMinimumSize(600, 400)
 
-                layout.addWidget(texto_html)
-                dialogo.setLayout(layout)
-                dialogo.exec_()
+                    layout = QVBoxLayout()
+                    texto_html = QTextEdit()
+                    texto_html.setReadOnly(True)
+                    texto_html.setHtml(resultado_html)
 
-
-
-
+                    layout.addWidget(texto_html)
+                    dialogo.setLayout(layout)
+                    dialogo.exec_()
 
     
         except Exception as e:
@@ -209,10 +219,17 @@ class VentanaPrincipal(QWidget):
 
 """
 
-0.4x + 0,5y 
 
-0.3x + 0.1y <= 4
-0.5x + 0.5y = 12
+Ejemplo con gran M
+
+Función objetivo:
+0.4x + 0.5y 
+
+Restricciones:
+0.3x + 0.1y <= 2.7
+0.5x + 0.5y = 6
 0.6x + 0.4y >= 6
 x, y >= 0
+
+
 """
