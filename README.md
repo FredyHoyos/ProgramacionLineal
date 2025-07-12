@@ -24,44 +24,55 @@ Aplicación de escritorio en Python que permite resolver problemas de optimizaci
 
 ## 🧠 Estructura del proyecto
 
-<pre> ```plaintext ProgramacionLineal/ ├── core/ │ ├── analisisSensibilidad.py # Módulo para análisis postóptimo │ ├── estandarizar.py # Pasa el modelo a forma estándar │ ├── graficador_lineal.py # Método gráfico (2D) │ ├── granM.py # Método de la M grande (Z simbólica) │ ├── simplex.py # Resolución Simplex sin M │ ├── simplexGranM.py # Resolución Simplex con M paso a paso ├── gui/ │ └── VentanaPrincipal.py # Interfaz principal en PyQt5 ├── main.py # Punto de entrada de la aplicación ├── requirements.txt # Dependencias del proyecto ``` </pre>
+ProgramacionLineal/  
+├── core/  
+│    ├── analisisSensibilidad.py – Módulo para análisis postóptimo  
+│    ├── estandarizar.py – Pasa el modelo a forma estándar  
+│    ├── graficador_lineal.py – Método gráfico (2D)  
+│    ├── granM.py – Método de la M grande (Z simbólica)  
+│    ├── simplex.py – Resolución Simplex sin M  
+│    ├── simplexGranM.py – Resolución Simplex con M paso a paso  
+├── gui/  
+│    └── VentanaPrincipal.py – Interfaz principal en PyQt5  
+├── main.py – Punto de entrada de la aplicación  
+├── requirements.txt – Dependencias del proyecto  
 
 ---
 
-## 🧑‍💻 Ejemplo de uso
+## 🧑‍💻 Ejemplo de uso  
 
-**Función objetivo:**
-0.4x + 0.5y
-
-
-**Restricciones:** 
-0.3x + 0.1y <= 2.7 
-0.5x + 0.5y = 6
-0.6x + 0.4y >= 6
-x, y >= 0
+**Función objetivo:**  
+0.4x + 0.5y  
 
 
-📌 El sistema reconocerá la necesidad de variables artificiales (`A`) y aplicará automáticamente el método de la M grande.
+**Restricciones:**   
+0.3x + 0.1y <= 2.7   
+0.5x + 0.5y = 6  
+0.6x + 0.4y >= 6  
+x, y >= 0  
+
+
+📌 El sistema reconocerá la necesidad de variables artificiales (`A`) y aplicará automáticamente el método de la M grande.  
 
 ---
 
-## 🛠️ Instalación y ejecución
+## 🛠️ Instalación y ejecución  
+  
+### 1. Clona el repositorio  
 
-### 1. Clona el repositorio
 
-
-git clone https://github.com/FredyHoyos/ProgramacionLineal.git
-cd ProgramacionLineal
-2. Crea un entorno virtual (opcional pero recomendado)
-python -m venv venv
-venv\Scripts\activate   # En Windows
-source venv/bin/activate  # En Linux/macOS
-3. Instala dependencias
-pip install -r requirements.txt
-4. Ejecuta la aplicación
-python main.py
-📦 Requisitos
-Python 3.9 o superior
+git clone https://github.com/FredyHoyos/ProgramacionLineal.git  
+cd ProgramacionLineal  
+2. Crea un entorno virtual (opcional pero recomendado)  
+python -m venv venv  
+venv\Scripts\activate   # En Windows  
+source venv/bin/activate  # En Linux/macOS  
+3. Instala dependencias  
+pip install -r requirements.txt  
+4. Ejecuta la aplicación  
+python main.py  
+📦 Requisitos  
+Python 3.9 o superior  
 
 PyQt5
 
