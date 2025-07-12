@@ -60,10 +60,14 @@ class VentanaPrincipal(QWidget):
         self.resolver_btn.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold;")
         self.graficar_btn = QPushButton("Gráfica")
         self.graficar_btn.setStyleSheet("background-color: #2196F3; color: white; font-weight: bold;")
+        self.sensibilidad_btn = QPushButton("Análisis de sensibilidad")
+        self.sensibilidad_btn.setStyleSheet("background-color: #FFC107; color: black; font-weight: bold;")
         botones_layout.addWidget(self.resolver_btn)
         botones_layout.addWidget(self.graficar_btn)
+        botones_layout.addWidget(self.sensibilidad_btn)
         self.graficar_btn.clicked.connect(self.graficar)
         self.resolver_btn.clicked.connect(self.resolver)
+        self.sensibilidad_btn.clicked.connect(self.analisis_sensibilidad)
 
         # Agregar todos los grupos al layout principal
         layout.addLayout(funcion_layout)
@@ -215,6 +219,78 @@ class VentanaPrincipal(QWidget):
         layout.addWidget(area_texto)
         dialogo.setLayout(layout)
         dialogo.exec_()
+
+    def analisis_sensibilidad(self):
+        from core.analisisSensibilidad import AnalisisSensibilidad
+        try:
+            funcion_str = self.funcion_input.text().strip()
+            restricciones_texto = self.restricciones_input.toPlainText().strip().split('\n')
+            es_maximizacion = self.max_radio.isChecked()
+
+            if not funcion_str:
+                self.mostrar_error("Debe ingresar una función objetivo.")
+                return
+
+            if not restricciones_texto:
+                self.mostrar_error("Debe ingresar al menos una restricción.")
+                return
+
+        # --- Parsear función objetivo ---
+            variables = sorted(set(re.findall(r'[a-zA-Z]\w*', funcion_str)))
+            coef_obj = [0] * len(variables)
+
+            for term in re.finditer(r'([+-]?\s*\d*\.?\d*)\s*([a-zA-Z]\w*)', funcion_str.replace(' ', '')):
+                coef_str, var = term.groups()
+                coef = float(coef_str) if coef_str.strip() not in ['', '+', '-'] else float(coef_str + '1')
+                coef_obj[variables.index(var)] = coef
+
+        # --- Parsear restricciones ---
+            restricciones = []
+            tipo_restricciones = []
+            rhs = []
+
+            for linea in restricciones_texto:
+                if not linea.strip() or linea.strip().lower() in ['x >= 0', 'x, y >= 0']:
+                    continue
+
+                match = re.search(r'(<=|>=|=)', linea)
+                if not match:
+                    continue
+
+                tipo = match.group(1)
+                lhs, rhs_val = linea.split(tipo)
+                rhs.append(float(rhs_val.strip()))
+                tipo_restricciones.append(tipo)
+
+                coef_fila = [0] * len(variables)
+                for term in re.finditer(r'([+-]?\s*\d*\.?\d*)\s*([a-zA-Z]\w*)', lhs.replace(' ', '')):
+                    coef_str, var = term.groups()
+                    coef = float(coef_str) if coef_str.strip() not in ['', '+', '-'] else float(coef_str + '1')
+                    coef_fila[variables.index(var)] = coef
+
+                restricciones.append(coef_fila)
+
+        # --- Llamar análisis de sensibilidad ---
+            analisis = AnalisisSensibilidad(variables, coef_obj, restricciones, tipo_restricciones, rhs, es_maximizacion)
+            analisis.construir_y_resolver()
+            html_sensibilidad = analisis.obtener_resultados()
+
+        # --- Mostrar en ventana ---
+            dialogo = QDialog(self)
+            dialogo.setWindowTitle("Análisis de sensibilidad")
+            dialogo.setMinimumSize(600, 400)
+
+            layout = QVBoxLayout()
+            texto_html = QTextEdit()
+            texto_html.setReadOnly(True)
+            texto_html.setHtml(html_sensibilidad)
+
+            layout.addWidget(texto_html)
+            dialogo.setLayout(layout)
+            dialogo.exec_()
+
+        except Exception as e:
+            self.mostrar_error(f"Ocurrió un error en el análisis de sensibilidad: {str(e)}")
 
 
 """
