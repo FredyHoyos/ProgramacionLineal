@@ -80,8 +80,8 @@ scipy
 
 
 
-🧑 Autores
-👤 Fredy Cárdenas
-👤 Andres Corcho
-🔗 GitHub
+🧑 Autores  
+👤 Fredy Cárdenas  
+👤 Andres Corcho  
+🔗 GitHub  
 
