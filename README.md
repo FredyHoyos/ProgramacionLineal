@@ -24,18 +24,7 @@ Aplicación de escritorio en Python que permite resolver problemas de optimizaci
 
 ## 🧠 Estructura del proyecto
 
-ProgramacionLineal/
-├── core/
-│ ├── analisisSensibilidad.py # Módulo para análisis postóptimo
-│ ├── estandarizar.py # Pasa el modelo a forma estándar
-│ ├── graficador_lineal.py # Método gráfico (2D)
-│ ├── granM.py # Método de la M grande (Z simbólica)
-│ ├── simplex.py # Resolución Simplex sin M
-│ ├── simplexGranM.py # Resolución Simplex con M paso a paso
-├── gui/
-│ └── VentanaPrincipal.py # Interfaz principal en PyQt5
-├── main.py # Punto de entrada de la aplicación
-├── requirements.txt # Dependencias del proyecto
+<pre> ```plaintext ProgramacionLineal/ ├── core/ │ ├── analisisSensibilidad.py # Módulo para análisis postóptimo │ ├── estandarizar.py # Pasa el modelo a forma estándar │ ├── graficador_lineal.py # Método gráfico (2D) │ ├── granM.py # Método de la M grande (Z simbólica) │ ├── simplex.py # Resolución Simplex sin M │ ├── simplexGranM.py # Resolución Simplex con M paso a paso ├── gui/ │ └── VentanaPrincipal.py # Interfaz principal en PyQt5 ├── main.py # Punto de entrada de la aplicación ├── requirements.txt # Dependencias del proyecto ``` </pre>
 
 ---
 
@@ -45,8 +34,8 @@ ProgramacionLineal/
 0.4x + 0.5y
 
 
-**Restricciones:**
-0.3x + 0.1y <= 2.7
+**Restricciones:** 
+0.3x + 0.1y <= 2.7 
 0.5x + 0.5y = 6
 0.6x + 0.4y >= 6
 x, y >= 0
@@ -60,7 +49,7 @@ x, y >= 0
 
 ### 1. Clona el repositorio
 
-```bash
+
 git clone https://github.com/FredyHoyos/ProgramacionLineal.git
 cd ProgramacionLineal
 2. Crea un entorno virtual (opcional pero recomendado)
@@ -85,9 +74,10 @@ sympy
 scipy
 
 📊 Capturas de pantalla
-<img width="795" height="659" alt="image" src="https://github.com/user-attachments/assets/2d3b8e29-bf86-417b-9190-fbe2a8a104f2" />
+<img width="491" height="429" alt="image" src="https://github.com/user-attachments/assets/415893f0-5cff-4e95-9e8f-85f5769e4313" />
 <img width="655" height="461" alt="image" src="https://github.com/user-attachments/assets/f7d002e2-3cc4-41b3-a7f7-532aa28d99b9" />
-<img width="596" height="427" alt="image" src="https://github.com/user-attachments/assets/0b92c092-204f-4c50-a3f6-cfc7fcd8488c" />
+<img width="596" height="427" alt="image" src="https://github.com/user-attachments/assets/ddbe2acb-b32a-46a4-9b66-4e0190c87a6d" />
+
 
 
 🧑 Autores
