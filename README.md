@@ -73,10 +73,10 @@ sympy
 
 scipy
 
-📊 Capturas de pantalla
-<img width="491" height="429" alt="image" src="https://github.com/user-attachments/assets/415893f0-5cff-4e95-9e8f-85f5769e4313" />
-<img width="655" height="461" alt="image" src="https://github.com/user-attachments/assets/f7d002e2-3cc4-41b3-a7f7-532aa28d99b9" />
-<img width="596" height="427" alt="image" src="https://github.com/user-attachments/assets/ddbe2acb-b32a-46a4-9b66-4e0190c87a6d" />
+📊 Capturas de pantalla  
+<img width="491" height="429" alt="image" src="https://github.com/user-attachments/assets/415893f0-5cff-4e95-9e8f-85f5769e4313" />  
+<img width="655" height="461" alt="image" src="https://github.com/user-attachments/assets/f7d002e2-3cc4-41b3-a7f7-532aa28d99b9" />  
+<img width="596" height="427" alt="image" src="https://github.com/user-attachments/assets/ddbe2acb-b32a-46a4-9b66-4e0190c87a6d" />  
 
 
 
